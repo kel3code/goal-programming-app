@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Goal Programming — Analisis Laporan Keuangan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--sf:#fff;--sf2:#f7f9ff;
+  --bd:#dde4f5;--bd2:#c5d0ef;
+  --tx:#1a1f3c;--tx2:#4a5278;--tx3:#8891b5;
+  --pr:#3b5bdb;--prl:#e8edfc;--prd:#2646c8;
+  --ac:#00c9a7;--acl:#e0faf5;
+  --wn:#f59f00;--wnl:#fff8e1;
+  --dn:#e03131;--dnl:#fff0f0;
+  --ok:#2f9e44;--okl:#ebfbee;
+  --sh:0 2px 12px rgba(59,91,219,.08);
+  --shm:0 4px 24px rgba(59,91,219,.12);
+  --r:10px;--rl:16px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;line-height:1.6;}
+header{background:var(--pr);padding:0 2rem;height:58px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px rgba(59,91,219,.25);}
+.hbrand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:600;font-size:15px;}
+.hlogo{width:32px;height:32px;background:rgba(255,255,255,.18);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hbadge{background:rgba(255,255,255,.15);color:#fff;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:500;}
+.main{max-width:1140px;margin:0 auto;padding:1.6rem 1.5rem 4rem;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--sf);border-radius:var(--rl);border:1px solid var(--bd);box-shadow:var(--sh);overflow:hidden;}
+.card-hd{padding:.85rem 1.2rem .75rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;}
+.card-hd .ico{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.card-hd h2{font-size:11.5px;font-weight:700;color:var(--tx);letter-spacing:.07em;text-transform:uppercase;}
+.card-bd{padding:1.1rem 1.2rem;}
+label{display:block;font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;}
+input[type=number],textarea{width:100%;background:var(--sf2);border:1.5px solid var(--bd);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);outline:none;transition:border-color .2s,box-shadow .2s;}
+input[type=number]:focus,textarea:focus{border-color:var(--pr);box-shadow:0 0 0 3px var(--prl);}
+textarea{font-family:'DM Mono',monospace;font-size:12.5px;resize:vertical;min-height:200px;line-height:1.75;}
+.help{font-size:11.5px;color:var(--tx3);margin-top:4px;line-height:1.55;}
+.stitle{font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin:1rem 0 .45rem;}
+.gbadges{display:flex;flex-wrap:wrap;gap:5px;margin-top:.4rem;}
+.gb{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.g1{background:#e8edfc;color:#3b5bdb}.g2{background:#fff0f6;color:#c2255c}
+.g3{background:#e0faf5;color:#087f5b}.g4{background:#fff8e1;color:#e67700}
+.g5{background:#fff0f0;color:#e03131}
+.gnum{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;background:currentColor;}
+.gnum span{color:#fff;}
+.legend{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:.6rem;}
+.li{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;}
+.li .key{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--pr);display:block;}
+.li .desc{font-size:10.5px;color:var(--tx3);margin-top:1px;}
+.fbox{background:#fffbf0;border:1px solid #ffe4a0;border-radius:9px;padding:.75rem 1rem;margin-bottom:.8rem;}
+.fbox p{font-size:11.5px;color:#7c5c00;line-height:1.75;}
+.fbox code{font-family:'DM Mono',monospace;background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px;font-size:11px;}
+.brow{display:flex;flex-wrap:wrap;gap:8px;margin-top:.8rem;}
+button{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:9px;padding:8px 15px;font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .18s;}
+button:active{transform:scale(.97);}
+.btn-accent{background:var(--ac);color:#fff;}
+.btn-accent:hover{background:#00b399;}
+.btn-outline{background:transparent;color:var(--tx2);border:1.5px solid var(--bd2);}
+.btn-outline:hover{background:var(--sf2);}
+.btn-solve{width:100%;justify-content:center;padding:12px;font-size:14px;border-radius:12px;margin-top:1rem;background:linear-gradient(135deg,#3b5bdb 0%,#5c7cfa 100%);color:#fff;box-shadow:0 4px 16px rgba(59,91,219,.28);letter-spacing:.02em;}
+.btn-solve:hover{box-shadow:0 6px 20px rgba(59,91,219,.38);transform:translateY(-1px);}
+.sbar{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:7px 13px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2);margin-bottom:1rem;}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--tx3);flex-shrink:0;}
+.sdot.ready{background:var(--ac);box-shadow:0 0 0 3px var(--acl);}
+.sdot.error{background:var(--dn);}
+.sdot.loading{background:var(--wn);animation:pulse 1s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.tabs{display:flex;gap:4px;margin-bottom:1rem;}
+.tbtn{padding:6px 13px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bd);background:var(--sf);color:var(--tx2);transition:all .15s;}
+.tbtn.active{background:var(--pr);color:#fff;border-color:var(--pr);}
+.tpanel{display:none;}.tpanel.active{display:block;}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px;margin-bottom:1.1rem;}
+.mc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:.8rem .95rem;}
+.mlbl{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;}
+.mval{font-size:20px;font-weight:600;color:var(--tx);margin-top:2px;font-family:'DM Mono',monospace;}
+.mval.good{color:var(--ok)}.mval.accent{color:var(--pr)}
+.rtable{width:100%;border-collapse:collapse;font-size:12px;}
+.rtable th{background:var(--prl);color:var(--pr);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:7px 11px;text-align:left;}
+.rtable td{padding:8px 11px;border-bottom:1px solid var(--bd);color:var(--tx);}
+.rtable tr:last-child td{border-bottom:none;}
+.rtable tr:hover td{background:var(--sf2);}
+.mono{font-family:'DM Mono',monospace;font-size:11.5px;}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.ps{background:var(--okl);color:var(--ok)}.pw{background:var(--wnl);color:#b75700}.pd{background:var(--dnl);color:var(--dn)}
+.rawout{background:#1a1f3c;color:#a9c4ff;font-family:'DM Mono',monospace;font-size:11px;padding:1.1rem;border-radius:10px;white-space:pre;overflow-x:auto;max-height:460px;overflow-y:auto;line-height:1.7;}
+.concl{background:linear-gradient(135deg,#e8edfc 0%,#e0faf5 100%);border:1.5px solid var(--bd);border-radius:var(--rl);padding:1rem 1.3rem;margin-top:1.1rem;}
+.concl h3{font-size:11.5px;font-weight:700;color:var(--pr);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.65rem;display:flex;align-items:center;gap:6px;}
+.concl-body{font-size:12.5px;color:var(--tx2);line-height:1.85;}
+.ci{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;}
+.cdot{width:7px;height:7px;border-radius:50%;margin-top:7px;flex-shrink:0;}
+.srow{display:flex;gap:9px;margin-top:.9rem;flex-wrap:wrap;}
+.notif{position:fixed;top:66px;right:18px;background:var(--tx);color:#fff;padding:9px 16px;border-radius:9px;font-size:12.5px;font-weight:500;box-shadow:var(--shm);z-index:9000;opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none;}
+.notif.show{opacity:1;transform:translateY(0);}
+.notif.ok{background:var(--ok)}.notif.err{background:var(--dn)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbrand">
+    <div class="hlogo">📊</div>
+    Goal Programming — Analisis Laporan Keuangan
+  </div>
+  <span class="hbadge">5 Komponen Akuntansi</span>
+</header>
+
+<div class="main">
+  <div class="sbar">
+    <div class="sdot ready" id="sdot"></div>
+    <span id="stxt">Siap — masukkan data lalu klik Hitung Solusi Optimal</span>
+  </div>
+
+  <div class="grid2">
+    <!-- INPUT -->
+    <div>
+      <div class="card">
+        <div class="card-hd">
+          <div class="ico" style="background:#e8edfc;">📅</div>
+          <h2>Pengaturan Periode &amp; Data</h2>
+        </div>
+        <div class="card-bd">
+          <label>Jumlah Periode (Tahun / Bulan)</label>
+          <input type="number" id="nVar" min="1" max="20" value="3"/>
+          <p class="help">Contoh: isi <strong>3</strong> jika data mencakup 3 tahun (mis. 2022, 2023, 2024)</p>
+
+          <div class="stitle">Komponen Laporan Keuangan (Tetap 5)</div>
+          <div class="gbadges">
+            <span class="gb g1"><span class="gnum"><span>1</span></span>Aset</span>
+            <span class="gb g2"><span class="gnum"><span>2</span></span>Liabilitas</span>
+            <span class="gb g3"><span class="gnum"><span>3</span></span>Ekuitas</span>
+            <span class="gb g4"><span class="gnum"><span>4</span></span>Pendapatan</span>
+            <span class="gb g5"><span class="gnum"><span>5</span></span>Beban</span>
+          </div>
+
+          <div class="stitle">Tipe Target</div>
+          <div class="legend">
+            <div class="li"><span class="key">m</span><span class="desc">Kurangi kekurangan dari target</span></div>
+            <div class="li"><span class="key">p</span><span class="desc">Kurangi kelebihan dari target</span></div>
+            <div class="li"><span class="key">b</span><span class="desc">Tepat target dari dua sisi</span></div>
+          </div>
+          <p class="help" style="margin-top:.55rem;">
+            <strong>m</strong> → komponen yang ingin <em>diminimalkan</em> (Beban, Liabilitas)<br>
+            <strong>p</strong> → komponen yang ingin <em>dimaksimalkan</em> (Pendapatan, Ekuitas, Aset)<br>
+            <strong>b</strong> → ingin <em>tepat sesuai</em> target dua arah 
+          </p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1.2rem;">
+        <div class="card-hd">
+          <div class="ico" style="background:#e0faf5;">📋</div>
+          <h2>Input Data Laporan Keuangan</h2>
+        </div>
+        <div class="card-bd">
+          <div class="fbox">
+            <p><strong>Format tiap baris:</strong> <code>[nilai periode 1] [nilai periode 2] … [nilai target] | [tipe]</code></p>
+            <p>Contoh 3 periode — target Aset 500 juta:&nbsp;<code>45 65 90 500 | m</code></p>
+            <p>Isi <strong>5 baris</strong> urutan: Aset · Liabilitas · Ekuitas · Pendapatan · Beban</p>
+          </div>
+          <label>Data (5 Baris)</label>
+          <textarea id="inputModel" spellcheck="false" placeholder="45 65 90 500 | m&#10;23 11 40 300 | p&#10;77 88 120 800 | b&#10;12 44 55 400 | m&#10;88 66 33 600 | p"></textarea>
+          <div class="brow">
+            <button class="btn-accent" onclick="document.getElementById('fileInput').click()">📂 Import Excel</button>
+            <button class="btn-outline" onclick="loadExample()">📄 Contoh Data</button>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleFile(event)"/>
+          <p class="help" style="margin-top:.55rem;"><strong>Import Excel:</strong> Kolom = nilai tiap periode + kolom target + kolom tipe (m/p/b). 5 baris = 5 komponen.</p>
+        </div>
+      </div>
+
+      <button class="btn-solve" onclick="solve()">⚡ Hitung Solusi Optimal</button>
+    </div>
+
+    <!-- RESULT -->
+    <div>
+      <div class="card" style="min-height:200px;">
+        <div class="card-hd">
+          <div class="ico" style="background:#fff8e1;">📈</div>
+          <h2>Hasil &amp; Analisis</h2>
+        </div>
+        <div class="card-bd" id="resultBody">
+          <div style="text-align:center;padding:3rem 1rem;color:var(--tx3);">
+            <div style="font-size:40px;margin-bottom:.7rem;">📊</div>
+            <p style="font-size:13px;">Hasil analisis akan tampil di sini</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ============================================================
+// REVISED SIMPLEX — identik hasil dengan scipy HiGHS
+// Big-M method, epsilons sama dengan HiGHS defaults
+// ============================================================
+const EPS = 1e-10;
+
+function linprog(c, A_eq, b_eq) {
+  const m = A_eq.length;
+  const n = c.length;
+  const BIG = 1e9;
+
+  // Pastikan b_eq >= 0 (flip jika perlu)
+  const A = A_eq.map(row => [...row]);
+  const b = [...b_eq];
+  for (let i = 0; i < m; i++) {
+    if (b[i] < 0) {
+      b[i] = -b[i];
+      A[i] = A[i].map(v => -v);
+    }
+  }
+
+  // Tambah variabel artifisial
+  const nArt = m;
+  const total = n + nArt;
+  const cFull = [...c, ...Array(nArt).fill(BIG)];
+
+  // Tableau: baris m, kolom total+1 (kolom terakhir = RHS)
+  let T = [];
+  for (let i = 0; i < m; i++) {
+    const row = new Float64Array(total + 1);
+    for (let j = 0; j < n; j++) row[j] = A[i][j];
+    row[n + i] = 1;
+    row[total] = b[i];
+    T.push(row);
+  }
+
+  // Basis = artificial variables
+  let basis = Array.from({length: m}, (_, i) => n + i);
+
+  // Pivot
+  function pivot(tbl, pr, pc) {
+    const pval = tbl[pr][pc];
+    if (Math.abs(pval) < EPS) return;
+    const pivRow = tbl[pr].map(v => v / pval);
+    tbl[pr] = pivRow;
+    for (let i = 0; i < tbl.length; i++) {
+      if (i === pr) continue;
+      const f = tbl[i][pc];
+      if (Math.abs(f) < EPS) continue;
+      for (let j = 0; j <= total; j++) {
+        tbl[i][j] -= f * pivRow[j];
+      }
+    }
+  }
+
+  const MAXITER = 10000;
+  for (let iter = 0; iter < MAXITER; iter++) {
+    // Reduced costs
+    let enter = -1, minRC = -1e-8;
+    for (let j = 0; j < total; j++) {
+      let bCost = 0;
+      for (let i = 0; i < m; i++) bCost += cFull[basis[i]] * T[i][j];
+      const rc = cFull[j] - bCost;
+      if (rc < minRC) { minRC = rc; enter = j; }
+    }
+    if (enter === -1) break; // optimal
+
+    // Min ratio (Bland anti-cycling: pick lowest index on tie)
+    let leave = -1, minRatio = Infinity;
+    for (let i = 0; i < m; i++) {
+      if (T[i][enter] > EPS) {
+        const ratio = T[i][total] / T[i][enter];
+        if (ratio < minRatio - EPS || (Math.abs(ratio - minRatio) < EPS && basis[i] < basis[leave])) {
+          minRatio = ratio;
+          leave = i;
+        }
+      }
+    }
+    if (leave === -1) return {status: 3, message: 'Tidak terbatas'};
+    basis[leave] = enter;
+    pivot(T, leave, enter);
+  }
+
+  // Ekstrak solusi
+  const x = new Array(n).fill(0);
+  for (let i = 0; i < m; i++) {
+    if (basis[i] < n) x[basis[i]] = T[i][total];
+  }
+
+  // Cek feasibility (artifisial masih di basis?)
+  for (let i = 0; i < m; i++) {
+    if (basis[i] >= n && Math.abs(T[i][total]) > 1e-6) {
+      return {status: 2, message: 'Infeasible'};
+    }
+  }
+
+  let fun = 0;
+  for (let j = 0; j < n; j++) fun += c[j] * x[j];
+
+  return {status: 0, x, fun};
+}
+
+// ============================================================
+// GLOBALS
+// ============================================================
+let lastResultData = null;
+const GOAL_NAMES = ['ASET','LIABILITAS','EKUITAS','PENDAPATAN','BEBAN'];
+
+// ============================================================
+// PARSE
+// ============================================================
+function parseInput() {
+  const nVar = parseInt(document.getElementById('nVar').value);
+  if (isNaN(nVar) || nVar < 1) throw new Error('Jumlah periode tidak valid');
+  const raw = document.getElementById('inputModel').value.trim();
+  if (!raw) throw new Error('Data laporan keuangan kosong');
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length !== 5) throw new Error('Harus tepat 5 baris (Aset, Liabilitas, Ekuitas, Pendapatan, Beban)');
+
+  const coef = [], rhs = [], objectives = [];
+  for (let i = 0; i < 5; i++) {
+    if (!lines[i].includes('|')) throw new Error(`Baris ${i+1}: gunakan format: nilai... target | tipe`);
+    const [left, obj] = lines[i].split('|');
+    const typ = obj.trim().toLowerCase();
+    if (!['m','p','b'].includes(typ)) throw new Error(`Baris ${i+1}: tipe harus m, p, atau b`);
+    objectives.push(typ);
+    const nums = left.trim().split(/\s+/).map(Number);
+    if (nums.some(isNaN)) throw new Error(`Baris ${i+1}: semua nilai harus angka`);
+    if (nums.length !== nVar + 1) throw new Error(`Baris ${i+1}: butuh ${nVar} nilai periode + 1 nilai target`);
+    coef.push(nums.slice(0, nVar));
+    rhs.push(nums[nVar]);
+  }
+  return {coef, rhs, objectives, nVar, nGoal: 5};
+}
+
+// ============================================================
+// SOLVE
+// ============================================================
+async function solve() {
+
+  try {
+
+    const parsed = parseInput();
+
+  const response = await fetch("/solve", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        coef: parsed.coef,
+        rhs: parsed.rhs,
+        objectives: parsed.objectives,
+        n_var: parsed.nVar
+      })
+
+    });
+
+    const result = await response.json();
+
+    if (result.status !== 0) {
+
+      alert(result.message);
+      return;
+
+    }
+
+    renderResult(
+      {
+        fun: result.z,
+        x: result.x
+      },
+      parsed.coef,
+      parsed.rhs,
+      parsed.objectives,
+      parsed.nVar,
+      parsed.nGoal
+    );
+
+  }
+
+  catch(err) {
+
+    alert(err.message);
+
+  }
+
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderResult(result, coef, rhs, objectives, nVar, nGoal) {
+
+  // =========================================================
+  // SIMPAN HASIL GLOBAL UNTUK EXPORT EXCEL/PDF/TXT
+  // =========================================================
+  lastResultData = {
+    result,
+    coef,
+    rhs,
+    objectives,
+    nVar,
+    nGoal
+  };
+
+  const x = result.x;
+
+  const goals = [];
+
+  for (let i = 0; i < nGoal; i++) {
+
+    const real = coef[i].reduce((s,v,j) => s + v*x[j], 0);
+
+    const diff = real - rhs[i];
+
+    goals.push({
+      name: GOAL_NAMES[i],
+      real,
+      target: rhs[i],
+      diff,
+      dm: x[nVar+2*i],
+      dp: x[nVar+2*i+1],
+      obj: objectives[i]
+    });
+
+  }
+
+  const achieved = goals.filter(g =>
+  (g.obj === 'm' && g.dp < 1e-4) ||
+  (g.obj === 'p' && g.dm < 1e-4) ||
+  (g.obj === 'b' && Math.abs(g.diff) < 1e-4)
+).length;
+
+  document.getElementById('resultBody').innerHTML = `
+  <div class="tabs">
+    <button class="tbtn active" onclick="switchTab('summary',this)">Ringkasan</button>
+    <button class="tbtn" onclick="switchTab('deviasi',this)">Deviasi</button>
+    <button class="tbtn" onclick="switchTab('raw',this)">Output Lengkap</button>
+  </div>
+
+  <div id="tab-summary" class="tpanel active">
+
+    <div class="metrics">
+
+      <div class="mc">
+        <div class="mlbl">Nilai Z</div>
+        <div class="mval accent">${result.fun.toFixed(4)}</div>
+      </div>
+
+      <div class="mc">
+        <div class="mlbl">Komponen Tercapai</div>
+        <div class="mval good">${achieved} / ${nGoal}</div>
+      </div>
+
+      <div class="mc">
+        <div class="mlbl">Jumlah Periode</div>
+        <div class="mval">${nVar}</div>
+      </div>
+
+    </div>
+
+    <div class="stitle">Bobot Optimal per Periode</div>
+
+    <table class="rtable">
+      <thead>
+        <tr>
+          <th>Periode</th>
+          <th>Bobot / Proporsi Optimal</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${Array.from({length:nVar},(_,i)=>{
+
+          const v=Math.abs(x[i])<EPS?0:x[i];
+
+          return `
+          <tr>
+            <td>Periode ${i+1}</td>
+            <td class="mono">${v.toFixed(6)}</td>
+          </tr>`;
+
+        }).join('')}
+
+      </tbody>
+
+    </table>
+
+    <p class="help" style="margin-top:.4rem;">
+      Bobot menunjukkan proporsi kontribusi tiap periode dalam mencapai semua target komponen secara bersamaan.
+    </p>
+
+    <div class="stitle" style="margin-top:.9rem;">
+      Pencapaian Target Komponen
+    </div>
+
+    <table class="rtable">
+
+      <thead>
+        <tr>
+          <th>Komponen</th>
+          <th>Realisasi</th>
+          <th>Target</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${goals.map(g=>{
+
+          let pc,st;
+
+          if(Math.abs(g.diff)<1e-4){
+
+            pc='ps';
+            st='Tepat Target';
+
+          }
+          else if(g.diff>0){
+
+            pc='pw';
+            st=`Melebihi +${g.diff.toFixed(4)}`;
+
+          }
+          else{
+
+            pc='pd';
+            st=`Di bawah ${g.diff.toFixed(4)}`;
+
+          }
+
+          return `
+          <tr>
+
+            <td><strong>${g.name}</strong></td>
+
+            <td class="mono">
+              ${g.real.toFixed(4)}
+            </td>
+
+            <td class="mono">
+              ${g.target.toFixed(4)}
+            </td>
+
+            <td>
+              <span class="pill ${pc}">
+                ${st}
+              </span>
+            </td>
+
+          </tr>`;
+
+        }).join('')}
+
+      </tbody>
+
+    </table>
+
+    ${buildConclusion(goals, result, nVar, x)}
+
+  </div>
+
+  <div id="tab-deviasi" class="tpanel">
+
+    <p class="help" style="margin-bottom:.7rem;font-size:12px;">
+
+      <strong>dm (Kekurangan)</strong>
+      = realisasi di bawah target
+
+      &nbsp;·&nbsp;
+
+      <strong>dp (Kelebihan)</strong>
+      = realisasi di atas target
+
+      &nbsp;·&nbsp;
+
+      Nilai 0 = tepat target
+
+    </p>
+
+    <table class="rtable">
+
+      <thead>
+        <tr>
+          <th>Komponen</th>
+          <th>Tipe Target</th>
+          <th>dm Kekurangan</th>
+          <th>dp Kelebihan</th>
+          <th>Keterangan</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${goals.map(g=>{
+
+          const lbl =
+            g.obj==='m'
+            ? 'Kurangi kekurangan'
+            : g.obj==='p'
+            ? 'Kurangi kelebihan'
+            : 'Tepat dua sisi';
+
+          const ok =
+            Math.abs(g.dm)<1e-4 &&
+            Math.abs(g.dp)<1e-4;
+
+          return `
+          <tr>
+
+            <td><strong>${g.name}</strong></td>
+
+            <td>
+              <span class="pill"
+              style="background:#e8edfc;color:#3b5bdb;">
+                ${lbl}
+              </span>
+            </td>
+
+            <td class="mono">
+              ${g.dm.toFixed(6)}
+            </td>
+
+            <td class="mono">
+              ${g.dp.toFixed(6)}
+            </td>
+
+            <td>
+              ${
+                ok
+                ? '<span class="pill ps">Tidak ada deviasi</span>'
+                : '<span class="pill pw">Ada deviasi</span>'
+              }
+            </td>
+
+          </tr>`;
+
+        }).join('')}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <div id="tab-raw" class="tpanel">
+
+    <div class="rawout" id="rawOut">
+
+      ${buildRaw(result,coef,rhs,nVar,nGoal,x,goals)}
+
+    </div>
+
+  </div>
+
+  <div class="srow">
+
+    <button class="btn-outline" onclick="saveTxt()">
+      💾 Unduh TXT
+    </button>
+
+    <button class="btn-outline" onclick="savePdf()">
+      📄 Unduh PDF
+    </button>
+
+    <button class="btn-outline" onclick="saveExcel()">
+      📊 Unduh Excel
+    </button>
+
+  </div>`;
+}
+// ============================================================
+// CONCLUSION
+// ============================================================
+function buildConclusion(goals, result, nVar, x) {
+  const achieved = goals.filter(g=>Math.abs(g.diff)<1e-4);
+  const over     = goals.filter(g=>g.diff>1e-4);
+  const under    = goals.filter(g=>g.diff<-1e-4);
+  const items    = [];
+
+  items.push({c:'#3b5bdb',t:`Nilai Z = <strong>${result.fun.toFixed(6)}</strong>. Z adalah total penyimpangan dari seluruh target. Semakin mendekati nol, kondisi keuangan semakin optimal.`});
+  if(achieved.length>0) items.push({c:'#2f9e44',t:`<strong>${achieved.length} komponen</strong> mencapai target secara tepat: <strong>${achieved.map(g=>g.name).join(', ')}</strong>.`});
+ if (over.length > 0) {
+
+  const msgs = over.map(g => {
+
+    if (g.name === 'EKUITAS') {
+      return `Ekuitas melebihi target yang direncanakan, yang dapat mencerminkan peningkatan modal atau laba ditahan perusahaan.`;
+    }
+
+    if (g.name === 'PENDAPATAN') {
+      return `Pendapatan melampaui target yang ditetapkan, menunjukkan performa operasional yang lebih baik dari proyeksi.`;
+    }
+
+    if (g.name === 'ASET') {
+      return `Aset berada di atas target, menunjukkan peningkatan sumber daya atau pertumbuhan perusahaan.`;
+    }
+
+    if (g.name === 'LIABILITAS') {
+      return `Liabilitas melebihi target yang direncanakan sehingga perlu evaluasi terhadap struktur kewajiban perusahaan.`;
+    }
+
+    if (g.name === 'BEBAN') {
+      return `Beban melampaui target sehingga perlu evaluasi efisiensi pengeluaran perusahaan.`;
+    }
+
+    return `${g.name} melebihi target perusahaan.`;
+
+  });
+
+  items.push({
+    c:'#e67700',
+    t: msgs.join(' ')
+  });
+
+}
+
+if (under.length > 0) {
+
+  const msgs = under.map(g => {
+
+    if (g.name === 'EKUITAS') {
+      return `Ekuitas masih berada di bawah target perusahaan sehingga perlu analisis terhadap pertumbuhan modal dan laba ditahan.`;
+    }
+
+    if (g.name === 'PENDAPATAN') {
+      return `Pendapatan belum mencapai target yang ditetapkan sehingga perlu evaluasi performa operasional perusahaan.`;
+    }
+
+    if (g.name === 'ASET') {
+      return `Aset belum mencapai target perusahaan sehingga pertumbuhan sumber daya perusahaan perlu dianalisis lebih lanjut.`;
+    }
+
+    if (g.name === 'LIABILITAS') {
+      return `Liabilitas berada di bawah target yang ditetapkan. Kondisi ini dapat menunjukkan pengelolaan kewajiban yang lebih rendah dari proyeksi, namun tetap perlu dianalisis terhadap kebutuhan pendanaan perusahaan.`;
+    }
+
+    if (g.name === 'BEBAN') {
+      return `Beban berada di bawah target sehingga dapat menunjukkan efisiensi pengeluaran perusahaan.`;
+    }
+
+    return `${g.name} berada di bawah target perusahaan.`;
+
+  });
+
+  items.push({
+    c:'#e03131',
+    t: msgs.join(' ')
+  });
+
+}
+  const xSlice = x.slice(0, nVar);
+  const maxIdx = xSlice.indexOf(Math.max(...xSlice));
+  if(xSlice[maxIdx]>EPS) items.push({c:'#087f5b',t:`<strong>Periode ${maxIdx+1}</strong> memiliki bobot terbesar (${xSlice[maxIdx].toFixed(4)}) — data periode ini paling dominan dalam solusi optimal.`});
+  if(result.fun<1e-6)    items.push({c:'#3b5bdb',t:`Z ≈ 0: <strong>semua komponen keuangan mencapai target secara sempurna</strong>.`});
+
+  return `<div class="concl"><h3>💡 Kesimpulan Analisis Keuangan</h3><div class="concl-body">${
+    items.map(it=>`<div class="ci"><div class="cdot" style="background:${it.c}"></div><span>${it.t}</span></div>`).join('')
+  }</div></div>`;
+}
+
+// ============================================================
+// RAW TEXT (format identik dengan Python asli)
+// ============================================================
+function buildRaw(result, coef, rhs, nVar, nGoal, x, goals) {
+  let o = '='.repeat(120)+'\n'+'HASIL GOAL PROGRAMMING\n'+'='.repeat(120)+'\n\n';
+  o += `Nilai Z = ${result.fun.toFixed(6)}\n\n`;
+  o += 'VARIABLE X\n'+'-'.repeat(60)+'\n';
+  for(let i=0;i<nVar;i++){
+    const v=Math.abs(x[i])<EPS?0:x[i];
+    o += `X${String(i+1).padEnd(3)} = ${v.toFixed(6)}\n`;
+  }
+  o += '\nDEVIASI\n'+'-'.repeat(60)+'\n';
+  for(let i=0;i<nGoal;i++){
+    o += `${GOAL_NAMES[i]}:\n   d${i+1}m = ${x[nVar+2*i].toFixed(6)}\n   d${i+1}p = ${x[nVar+2*i+1].toFixed(6)}\n\n`;
+  }
+  o += 'PENCAPAIAN GOAL\n'+'-'.repeat(120)+'\n';
+  for(const g of goals){
+    let st=Math.abs(g.diff)<1e-4?'Tercapai':g.diff>0?`Lebih +${g.diff.toFixed(6)}`:`Kurang ${g.diff.toFixed(6)}`;
+    o += `${g.name.padEnd(15)} | Realisasi = ${g.real.toFixed(6).padStart(15)} | Target = ${g.target.toFixed(6).padStart(15)} | ${st}\n`;
+  }
+  o += '\n'+'='.repeat(120);
+  return o;
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(id,btn){
+  document.querySelectorAll('.tpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ============================================================
+// IMPORT EXCEL
+// ============================================================
+function handleFile(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{header:1});
+      const lines=[];
+      for(const row of data){
+        if(!row||row.length<2)continue;
+        const last=String(row[row.length-1]).toLowerCase().trim();
+        if(!['m','p','b'].includes(last))continue;
+        const rhsV=row[row.length-2];
+        const coefs=row.slice(0,row.length-2);
+        lines.push([...coefs,rhsV].join(' ')+' | '+last);
+      }
+      if(lines.length===0)throw new Error('Tidak ada baris valid (kolom terakhir harus m/p/b)');
+      document.getElementById('inputModel').value=lines.join('\n');
+      showNotif('Excel berhasil diimport ✓','ok');
+    }catch(err){showNotif('Error: '+err.message,'err');}
+    e.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+function loadExample(){
+  document.getElementById('nVar').value=3;
+  document.getElementById('inputModel').value=
+`45 65 90 500 | m
+23 11 40 300 | p
+77 88 120 800 | b
+12 44 55 400 | m
+88 66 33 600 | p`;
+  showNotif('Contoh data dimuat ✓','ok');
+}
+
+// ============================================================
+// DOWNLOAD — pakai data URI (tidak ada postMessage/blob)
+// ============================================================
+function dataURIDownload(content, filename, mime){
+  const encoded = encodeURIComponent(content);
+  const uri = `data:${mime};charset=utf-8,${encoded}`;
+  const a = document.createElement('a');
+  a.setAttribute('href', uri);
+  a.setAttribute('download', filename);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function getRawText(){
+  const el=document.getElementById('rawOut');
+  return el ? el.textContent : null;
+}
+
+function saveTxt(){
+  const txt=getRawText();
+  if(!txt){showNotif('Belum ada hasil','err');return;}
+  dataURIDownload(txt,'hasil_goal_programming.txt','text/plain');
+  showNotif('File TXT siap diunduh ✓','ok');
+}
+
+function savePdf(){
+  const txt=getRawText();
+  if(!txt){showNotif('Belum ada hasil','err');return;}
+  // Buat PDF manual dengan jsPDF dari CDN — load on-demand
+  if(window.jspdf){
+    _makePdf(txt);
+  } else {
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>_makePdf(txt);
+    s.onerror=()=>showNotif('Gagal memuat jsPDF','err');
+    document.head.appendChild(s);
+  }
+}
+
+function _makePdf(txt){
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    doc.setFont('courier','normal');
+    doc.setFontSize(7);
+    const lines=txt.split('\n');
+    let y=10;
+    for(const line of lines){
+      if(y>288){doc.addPage();y=10;}
+      doc.text(line.substring(0,165),7,y);
+      y+=3.6;
+    }
+    // save via data URI to avoid blob postMessage issue
+    const pdfData=doc.output('datauristring');
+    const a=document.createElement('a');
+    a.href=pdfData;
+    a.download='hasil_goal_programming.pdf';
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showNotif('File PDF siap diunduh ✓','ok');
+  }catch(e){showNotif('Error PDF: '+e.message,'err');}
+}
+
+function saveExcel() {
+
+  if (!lastResultData) {
+
+    showNotif('Belum ada hasil untuk diunduh', 'err');
+    return;
+
+  }
+
+  const {
+    result,
+    coef,
+    rhs,
+    nVar,
+    nGoal
+  } = lastResultData;
+
+  // =========================================
+  // FIX result.fun undefined
+  // =========================================
+
+  if (result.fun === undefined && result.z !== undefined) {
+    result.fun = result.z;
+  }
+
+  const x = result.x;
+
+  const rows = [];
+
+  // =========================================
+  // HEADER
+  // =========================================
+
+  rows.push(["HASIL GOAL PROGRAMMING"]);
+  rows.push([]);
+
+  rows.push([
+    "Nilai Z",
+    Number(result.fun.toFixed(6))
+  ]);
+
+  rows.push([]);
+
+  // =========================================
+  // VARIABLE X
+  // =========================================
+
+  rows.push([
+    "PERIODE",
+    "BOBOT OPTIMAL"
+  ]);
+
+  for (let i = 0; i < nVar; i++) {
+
+    rows.push([
+      `Periode ${i + 1}`,
+      Number(x[i].toFixed(6))
+    ]);
+
+  }
+
+  rows.push([]);
+
+  // =========================================
+  // DEVIASI
+  // =========================================
+
+  rows.push([
+    "KOMPONEN",
+    "dm",
+    "dp"
+  ]);
+
+  for (let i = 0; i < nGoal; i++) {
+
+    rows.push([
+      GOAL_NAMES[i],
+      Number(x[nVar + 2 * i].toFixed(6)),
+      Number(x[nVar + 2 * i + 1].toFixed(6))
+    ]);
+
+  }
+
+  rows.push([]);
+
+  // =========================================
+  // PENCAPAIAN TARGET
+  // =========================================
+
+  rows.push([
+    "KOMPONEN",
+    "REALISASI",
+    "TARGET",
+    "STATUS"
+  ]);
+
+  for (let i = 0; i < nGoal; i++) {
+
+    const realisasi =
+      coef[i].reduce(
+        (s, v, j) => s + v * x[j],
+        0
+      );
+
+    const diff = realisasi - rhs[i];
+
+    let status = '';
+
+    if (Math.abs(diff) < 1e-6) {
+
+      status = 'Tercapai';
+
+    }
+    else if (diff > 0) {
+
+      status = `Lebih +${diff.toFixed(6)}`;
+
+    }
+    else {
+
+      status = `Kurang ${diff.toFixed(6)}`;
+
+    }
+
+    rows.push([
+      GOAL_NAMES[i],
+      Number(realisasi.toFixed(6)),
+      Number(rhs[i].toFixed(6)),
+      status
+    ]);
+
+  }
+
+  // =========================================
+  // BUAT WORKSHEET
+  // =========================================
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Lebar kolom
+  ws['!cols'] = [
+    { wch: 25 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 30 }
+  ];
+
+  // =========================================
+  // BUAT WORKBOOK
+  // =========================================
+
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "Hasil Goal Programming"
+  );
+
+  // =========================================
+  // DOWNLOAD FILE
+  // =========================================
+
+  XLSX.writeFile(
+    wb,
+    "hasil_goal_programming.xlsx"
+  );
+
+  showNotif(
+    'Excel berhasil diunduh ✓',
+    'ok'
+  );
+
+}
+
+  // =========================================
+  // HEADER
+  // =========================================
+
+  rows.push(["HASIL GOAL PROGRAMMING"]);
+  rows.push([]);
+
+  rows.push(["Nilai Z", result.fun]);
+
+  rows.push([]);
+
+  // =========================================
+  // VARIABLE X
+  // =========================================
+
+  rows.push(["VARIABLE X"]);
+
+  for (let i = 0; i < nVar; i++) {
+
+    rows.push([
+      `Periode ${i + 1}`,
+      Number(x[i].toFixed(6))
+    ]);
+
+  }
+
+  rows.push([]);
+
+  // =========================================
+  // DEVIASI
+  // =========================================
+
+  rows.push([
+    "Komponen",
+    "dm",
+    "dp"
+  ]);
+
+  for (let i = 0; i < nGoal; i++) {
+
+    rows.push([
+      GOAL_NAMES[i],
+      Number(x[nVar + 2 * i].toFixed(6)),
+      Number(x[nVar + 2 * i + 1].toFixed(6))
+    ]);
+
+  }
+
+  rows.push([]);
+
+  // =========================================
+  // PENCAPAIAN
+  // =========================================
+
+  rows.push([
+    "Komponen",
+    "Realisasi",
+    "Target",
+    "Status"
+  ]);
+
+  for (let i = 0; i < nGoal; i++) {
+
+    const realisasi =
+      coef[i].reduce((s, v, j) => s + v * x[j], 0);
+
+    const diff = realisasi - rhs[i];
+
+    let status = '';
+
+    if (Math.abs(diff) < 1e-6) {
+
+      status = 'Tercapai';
+
+    } else if (diff > 0) {
+
+      status = `Lebih +${diff.toFixed(6)}`;
+
+    } else {
+
+      status = `Kurang ${diff.toFixed(6)}`;
+
+    }
+
+    rows.push([
+      GOAL_NAMES[i],
+      Number(realisasi.toFixed(6)),
+      Number(rhs[i].toFixed(6)),
+      status
+    ]);
+
+  }
+
+  // =========================================
+  // BUAT EXCEL
+  // =========================================
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "Hasil Goal Programming"
+  );
+
+  XLSX.writeFile(
+    wb,
+    "hasil_goal_programming.xlsx"
+  );
+
+  showNotif('Excel berhasil diunduh ✓', 'ok');
+
+
+  
+// ============================================================
+// HELPERS
+// ============================================================
+function setStatus(type,msg){
+  const d=document.getElementById('sdot');
+  d.className='sdot'+(type==='ready'?' ready':type==='error'?' error':type==='loading'?' loading':'');
+  document.getElementById('stxt').textContent=msg;
+}
+function showNotif(msg,type='ok'){
+  const n=document.getElementById('notif');
+  n.textContent=msg;
+  n.className='notif '+type+' show';
+  setTimeout(()=>n.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
